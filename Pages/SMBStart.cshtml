@@ -1,0 +1,45 @@
+﻿@page
+@model PersonalUniversalSite.Pages.SMBStartModel
+@{
+    ViewData["title"] = "SMB";
+}
+<title>@ViewData["title"]</title>
+
+<br />
+<br />
+
+<form method="post">
+
+    <script>
+        function showPassword() {
+            var x = document.getElementById("password");
+            if (x.type === "password") {
+                x.type = "text";
+            } else {
+                x.type = "password";
+            }
+        }
+    </script>
+
+    <label for="dataSource">Data Source: </label>
+    <input type="text" id="dataSource" name="dataSource" />
+
+    <br />
+    <br />
+
+    <label for="username">Username: </label>
+    <input type="text" id="username" name="username" />
+
+    <br />
+    <br />
+
+    <label for="password">Password: </label>
+    <input type="password" id="password" name="password" />
+    <input type="checkbox" onclick="showPassword()">
+
+    <br />
+
+    <input type="submit" /> 
+    <p>@ViewData["retry"]</p>
+</form>
+

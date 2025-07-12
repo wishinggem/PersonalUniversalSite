@@ -1,0 +1,107 @@
+﻿@page
+@model PersonalUniversalSite.Pages.Tools.Libraries.RegisterModel
+@{
+    ViewData["Title"] = "Create Account";
+}
+
+<style>
+    .register-container {
+        display: flex;
+        min-height: 100vh;
+        font-family: sans-serif;
+    }
+
+    .register-form {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2rem 4rem;
+        background-color: #fff;
+    }
+
+        .register-form h2 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+        width: 100%;
+        padding: 0.5rem;
+        border-radius: 0.375rem;
+        border: 1px solid #ccc;
+    }
+
+    .register-button {
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        background-color: #22c55e;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+        .register-button:hover {
+            background-color: #16a34a;
+        }
+
+    .login-link {
+        margin-top: 1rem;
+        font-size: 0.875rem;
+        color: #3b82f6;
+        text-decoration: none;
+    }
+
+    .register-image {
+        flex: 1;
+        background: linear-gradient(135deg, #63e6be, #38bdf8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+        .register-image img {
+            max-width: 100%;
+            border-radius: 1rem;
+        }
+</style>
+
+<div class="register-container">
+    <div class="register-form">
+        <h2>📝 Create an Account</h2>
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div style="background-color: #fee2e2; color: #b91c1c; padding: 0.5rem; border-radius: 0.375rem; margin-bottom: 1rem;">
+                @Model.ErrorMessage
+            </div>
+        }
+
+        <form method="post">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" name="username" required />
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" required />
+            </div>
+
+            <button type="submit" class="register-button">Register</button>
+
+            <a href="/Tools/Libraries/Login" class="login-link">Already have an account? Login</a>
+        </form>
+    </div>
+
+    <div class="register-image">
+        <img src="/MainStaticImages//registerbackground.png" alt="background" />
+    </div>
+</div>

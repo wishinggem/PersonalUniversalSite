@@ -1,0 +1,529 @@
+﻿@page
+@model PersonalUniversalSite.Pages.ProjectsModel
+@{
+    ViewData["Title"] = "Projects";
+}
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .label {
+            font-size: 16px;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px;
+            border-radius: 3px;
+            pointer-events: auto; /* Enable pointer events for labels */
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container" style="width: 100%; height: 100%; top: 0; left: 0; position: fixed;"></div>
+
+    <style>
+        .buttonInside {
+            position: absolute;
+            bottom: 5px;
+            right: 25px;
+        }
+
+        .buttonInsideGithub {
+            position: absolute;
+            bottom: 5px;
+            right: 25px;
+        }
+
+        .infoContainerE {
+            color: white;
+            text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
+        }
+
+        .label {
+            padding: 25px;
+            border-radius: 10px;
+            opacity: 1;
+        }
+
+        .extraLabel {
+            padding: 25px;
+            border-radius: 10px;
+        }
+
+        .labelH {
+            padding: 25px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .fade-in {
+            transition: opacity 0.7s; /* Slow fade in */
+        }
+
+        .fade-out {
+            transition: opacity 0.2s; /* Fast fade out */
+        }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <script>
+        // Disable the default context menu
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Basic Three.js setup
+        var scene = new THREE.Scene();
+
+        var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        var renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('container').appendChild(renderer.domElement);
+
+        function setBackground() {
+            var canvas = document.createElement('canvas');
+            var context = canvas.getContext('2d');
+            canvas.width = 512;
+            canvas.height = 512;
+
+            var gradient = context.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#404040'); // Light grey color at the top
+            gradient.addColorStop(1, '#000000'); // Darker grey color at the bottom
+
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            var gradientTexture = new THREE.CanvasTexture(canvas);
+            scene.background = gradientTexture
+        }
+
+        setBackground();
+
+        // CSS2DRenderer setup
+        var labelRenderer = new THREE.CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.pointerEvents = 'none'; // Ensure it doesn't block mouse events
+        document.getElementById('container').appendChild(labelRenderer.domElement);
+        // Create a light
+        var directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(0, 1, 0).normalize();
+        scene.add(directionalLight);
+
+        var hemisphereLight = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
+        scene.add(hemisphereLight);
+
+        function setLighting() {
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 1024; // Increase shadow map resolution
+            directionalLight.shadow.mapSize.height = 1024;
+            directionalLight.shadow.camera.near = 0.5; // Adjust shadow camera near and far planes
+            directionalLight.shadow.camera.far = 500;
+            directionalLight.shadow.camera.left = -50; // Adjust shadow camera frustum
+            directionalLight.shadow.camera.right = 50;
+            directionalLight.shadow.camera.top = 50;
+            directionalLight.shadow.camera.bottom = -50;
+            directionalLight.shadow.bias = -0.001; // Adjust shadow bias to reduce artifacts
+
+            // Enable soft shadows
+            directionalLight.shadow.mapSize.width = 2048; // Increase shadow map resolution for smoother shadows
+            directionalLight.shadow.mapSize.height = 2048;
+            directionalLight.shadow.radius = 4; // Add blur to the shadows for smoother transitions
+        }
+
+        setLighting();
+
+
+        var labelList = []
+        var divList = []
+        // Load the 3D model
+
+        var objects = []
+
+        var modelLabels = []
+
+        var homeModel = null;
+
+        var loader = new THREE.GLTFLoader();
+
+        function addModel(url, position, labels, extras, scale, tempName) {
+            loader.load(url, function (gltf) {
+                var model = gltf.scene;
+                model.position.copy(position);
+                scene.add(model);
+                objects.push(model);
+
+                if (scale !== null) {
+                    model.scale.copy(scale);
+                }
+
+                if (tempName === 'Home') {
+                    homeModel = model;
+                }
+
+                var tempLabels = []
+
+                labels.forEach(labelData => {
+                    var div = document.createElement('div');
+                    div.className = 'label';
+                    div.innerHTML = labelData.html;
+                    var label = new THREE.CSS2DObject(div);
+                    label.position.copy(labelData.position);
+                    model.add(label);
+
+                    // Attach event listeners to buttons
+                    div.querySelectorAll('.buttonInside').forEach(button => {
+                        button.addEventListener('click', function (event) {
+                            event.stopPropagation(); // Prevent the click from propagating to the canvas
+                            window.location.href = labelData.url;
+                        });
+                    });
+
+                    div.querySelectorAll('.buttonInsideGithub').forEach(button => {
+                        button.addEventListener('click', function (event) {
+                            event.stopPropagation(); // Prevent the click from propagating to the canvas
+                            window.open(labelData.githubUrl, '_blank');
+                        });
+                    });
+
+                    labelList.push(label);
+                    tempLabels.push(div);
+                    divList.push(div);
+                });
+
+                modelLabels.push(tempLabels);
+                //class = extraLabel
+                extras.forEach(data => {
+                    var div = document.createElement('div');
+                    div.className = 'extraLabel';
+                    div.innerHTML = data.html;
+                    var label = new THREE.CSS2DObject(div);
+                    label.position.copy(data.position);
+                    model.add(label);
+                })
+            }, undefined, function (error) {
+                console.error(error);
+            });
+        }
+
+        var cameraHeight = 35;
+
+        //return point
+        addModel('/MainStaticObjects/podiumFull.glb', new THREE.Vector3(-100, -cameraHeight, -100), [],
+            [
+                {
+                    html: `
+                                        <div class='infoContainerE'>
+                                            <div class='infoContent'>
+                                                <h2>Home</h2>
+                                            </div>
+                                        </div>
+                                    `,
+                    position: new THREE.Vector3(0, cameraHeight + 15, 0)
+                }
+            ],
+            new THREE.Vector3(1, 1, 1), 'Home'
+        );
+
+        addModel('/MainStaticObjects/podiumFull.glb', new THREE.Vector3(-200, -cameraHeight, 0), [
+            {
+                html: `
+                            <div class='infoContainer'>
+                                <div class='infoContent'>
+                                    <h2>Website</h2>
+                                                    <p>During April of 2024 I started work on a Website.  <br/><br/> In which an admin can log onto the website and modify the pages and info <br/>
+                        without needing to rebuild the website.<br/><br/> I accomplished this buy using json serialization and a frameworked template for the <br/>
+                                pages that can adapt to the content and make it fit as necessery.<br/><br/> This was designed so that the person who this was made for can easily make <br/>
+                the require updates to it without any experience in web development.</p>
+                                </div>
+                                <button class='buttonInsideGithub'>Website</button>
+                            </div>
+                        `,
+                position: new THREE.Vector3(2, 1, 0),
+                githubUrl: 'https://devonia-bolognese.co.uk'
+            },
+        ],
+            [
+                {
+                    html: `
+                                <div class='infoContainerE'>
+                                    <div class='infoContent'>
+                                        <h2>Devonia Website</h2>
+                                    </div>
+                                </div>
+                            `,
+                    position: new THREE.Vector3(0, cameraHeight + 15, 0)
+                }
+            ],
+            new THREE.Vector3(1, 1, 1)
+        );
+        addModel('/MainStaticObjects/podiumFull.glb', new THREE.Vector3(200, -cameraHeight, 0), [
+            {
+                html: `
+                                    <div class='infoContainer'>
+                                        <div class='infoContent'>
+                                            <h2>Server Management</h2>
+                                                            <p>During 2023 and 2024 I developed a custom managment system<br/>
+                                                            for my server. <br/><br/> 
+                                                            The main reason for this was when the server fell over and I only found out why <br/>
+                                                            when a small custom logging system told me there was no connection
+                                                            <br/> even when there was a conncetion <br/><br/> 
+                                                            So I imporved on this logging system and made a managment system</p>
+                                        </div>
+                                        <button class='buttonInsideGithub'>Source Code</button>
+                                    </div>
+                                `,
+                position: new THREE.Vector3(-2, 1, 0),
+                githubUrl: 'https://github.com/wishinggem/Server-Handling-Systems'
+            },
+        ],
+            [
+                {
+                    html: `
+                                        <div class='infoContainerE'>
+                                            <div class='infoContent'>
+                                                <h2>Server Managment</h2>
+                                            </div>
+                                        </div>
+                                    `,
+                    position: new THREE.Vector3(0, cameraHeight + 15, 0)
+                }
+            ],
+            new THREE.Vector3(1, 1, 1)
+        );
+        addModel('/MainStaticObjects/podiumFull.glb', new THREE.Vector3(-200, -cameraHeight, 60), [
+            {
+                html: `
+                                            <div class='infoContainer'>
+                                                <div class='infoContent'>
+                                                    <h2>Server Management</h2>
+                                                                    <p>During the development of this website i wanted to add accounts <br/>
+                                                                    I could achieve that by using json files like how I did with the other website<br/><br/>
+                                                                    However i wanted to use my sql server but I didnt want to create an API for this<br/>
+                                                                    esspecial as the server is running on the same network as the webserver so<br/> 
+                                                                    I created an API the runs localy that allows me to interface with the sql server from the web server <br/>
+                                                                    as it runs on the webserver</p>
+                                                </div>
+                                                <button class='buttonInsideGithub'>Source Code</button>
+                                            </div>
+                                        `,
+                position: new THREE.Vector3(-2, 1, 0),
+                githubUrl: 'https://github.com/wishinggem/Local-SQl-API'
+            },
+        ],
+            [
+                {
+                    html: `
+                                                <div class='infoContainerE'>
+                                                    <div class='infoContent'>
+                                                        <h2>Local SQL API</h2>
+                                                    </div>
+                                                </div>
+                                            `,
+                    position: new THREE.Vector3(0, cameraHeight + 15, 0)
+                }
+            ],
+            new THREE.Vector3(1, 1, 1)
+        );
+        addModel('/MainStaticObjects/pedestal.glb', new THREE.Vector3(200, -cameraHeight, 60), [], [], new THREE.Vector3(1, 1, 1));
+        addModel('/MainStaticObjects/pedestal.glb', new THREE.Vector3(-200, -cameraHeight, 120), [], [], new THREE.Vector3(1, 1, 1));
+        addModel('/MainStaticObjects/pedestal.glb', new THREE.Vector3(200, -cameraHeight, 120), [], [], new THREE.Vector3(1, 1, 1));
+        addModel('/MainStaticObjects/pedestal.glb', new THREE.Vector3(-200, -cameraHeight, 180), [], [], new THREE.Vector3(1, 1, 1));
+        addModel('/MainStaticObjects/pedestal.glb', new THREE.Vector3(200, -cameraHeight, 180), [], [], new THREE.Vector3(1, 1, 1));
+
+
+        //floor
+        var floorTexture = new THREE.ImageUtils.loadTexture('/MainStaticObjects/floorTexture.jpg');
+        floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping;
+        floorTexture.repeat.set(10, 10);
+        var floorMaterial = new THREE.MeshBasicMaterial({ map: floorTexture, side: THREE.DoubleSide });
+        var floorGeometry = new THREE.PlaneGeometry(1000, 1000, 10, 10);
+        var mesh = new THREE.Mesh(floorGeometry, floorMaterial);
+        mesh.position.copy(new THREE.Vector3(0, -cameraHeight, 20));
+        mesh.rotation.x = - Math.PI / 2;
+        mesh.receiveShadow = true;
+        scene.add(mesh);
+
+        // Set initial camera position and controls
+        camera.position.set(3, 3, 5);
+        var controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.25;
+        controls.rotateSpeed = 0.35;
+        controls.screenSpacePanning = true; // Enable panning
+
+        // Map mouse buttons
+        controls.mouseButtons = {
+            MIDDLE: THREE.MOUSE.PAN,
+            RIGHT: THREE.MOUSE.ROTATE
+        };
+
+        var raycaster = new THREE.Raycaster();
+        var labelPosition = new THREE.Vector3();
+
+        function updateLabelVisibility(element, div) {
+            labelPosition.setFromMatrixPosition(element.matrixWorld);
+            raycaster.set(camera.position, labelPosition.sub(camera.position).normalize());
+
+            var intersects = raycaster.intersectObjects(scene.children, true);
+
+            if (intersects.length > 0 && intersects[0].object !== element) {
+                div.classList.remove('fade-in');
+                div.classList.add('fade-out');
+                div.style.opacity = '0'; // Fade out the label if it is occluded
+            }
+            else {
+                div.classList.remove('fade-out');
+                div.classList.add('fade-in');
+                div.style.opacity = '1'; // Fade in the label if it is not occluded
+            }
+        }
+
+        var raycasterMouse = new THREE.Raycaster();
+        var mouse = new THREE.Vector2();
+        var selectedObject = null;
+
+        selectedObjectIndex = 0;
+
+        function showSelectedLabels() {
+            var i = 0;
+            modelLabels.forEach(label => {
+                if (i === selectedObjectIndex) {
+                    modelLabels[i].forEach(div => {
+                        div.className = 'label';
+                        div.style.pointerEvents = 'auto';
+                    });
+                }
+                else {
+                    modelLabels[i].forEach(div => {
+                        div.className = 'labelH';
+                        div.style.pointerEvents = 'none';
+                    });
+                }
+
+                i += 1;
+            })
+        }
+
+        function onMouseClick(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycasterMouse.setFromCamera(mouse, camera);
+            var intersects = raycasterMouse.intersectObjects(objects, true);
+
+            if (intersects.length > 0) {
+                selectedObject = intersects[0].object.parent
+
+                selectedObjectIndex = objects.indexOf(selectedObject);
+
+                showSelectedLabels();
+
+                var currentCameraPosition = camera.position.clone();
+
+                // Pan camera to the selected object
+                var targetPosition = new THREE.Vector3();
+                selectedObject.getWorldPosition(targetPosition);
+                controls.target.copy(targetPosition);
+
+                var multiplier = 1;
+                if (selectedObject.position.x > 0) {
+                    multiplier = -1;
+                }
+
+
+                var newCameraPosition = targetPosition.clone().add(currentCameraPosition.clone().sub(camera.position)).add(new THREE.Vector3(multiplier * 63, 63, 5)); // Adjust the offset as needed
+                if (selectedObjectIndex === objects.indexOf(homeModel)) {
+                    newCameraPosition = targetPosition.clone().add(currentCameraPosition.clone().sub(camera.position)).add(new THREE.Vector3(0, cameraHeight, 0)); // Adjust the offset as needed
+                }
+
+                gsap.to(camera.position, {
+                    duration: 1.5,
+                    x: newCameraPosition.x,
+                    y: newCameraPosition.y,
+                    z: newCameraPosition.z,
+                    onUpdate: function () {
+                        camera.lookAt(targetPosition);
+                    },
+                    onComplete: function() {
+                        if (selectedObjectIndex === objects.indexOf(homeModel)) {
+                            window.location.href = '/Index';
+                        }
+                    }
+                });
+
+                gsap.to(controls.target, {
+                    duration: 1.5,
+                    x: targetPosition.x,
+                    y: targetPosition.y,
+                    z: targetPosition.z
+                });
+                // Update controls to look at the selected object
+                controls.update();
+            }
+        }
+
+        window.addEventListener('click', onMouseClick, false);
+
+        var midPoint = new THREE.Vector3(0, -cameraHeight, 30); // Midpoint between (-200, 0, 60) and (200, 0, 60)
+
+        // Set camera position behind the objects
+        var distanceBehind = 200; // Adjust as needed
+        camera.position.set(midPoint.x, cameraHeight, midPoint.z - distanceBehind);
+
+        // Calculate direction vector towards the midpoint
+        var direction = midPoint.clone().sub(camera.position).normalize();
+
+        // Calculate rotation angles
+        var rotationY = Math.atan2(direction.x, direction.z);
+        var rotationX = Math.atan2(Math.sqrt(direction.z * direction.z + direction.x * direction.x), -direction.y);
+
+        // Set camera rotation
+        camera.rotation.set(rotationX, rotationY, 0);
+
+        // Ensure both renderers update properly
+        function animate() {
+            requestAnimationFrame(animate);
+
+            controls.update();
+            renderer.render(scene, camera);
+            labelRenderer.render(scene, camera);
+        }
+        animate();
+
+        window.onload = function () {
+            selectedObjectIndex = 0;
+            showSelectedLabels();
+        }
+
+        window.addEventListener('resize', function () {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>

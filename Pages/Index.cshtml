@@ -1,0 +1,810 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            /*margin-left: -200px;*/
+        }
+
+        .label {
+            font-size: 16px;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px;
+            border-radius: 3px;
+            pointer-events: auto; /* Enable pointer events for labels */
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container" style="width: 100%; height: 100%; top: 0; left: 0; position: fixed;"></div>
+
+    <style>
+        .buttonInside {
+            position: absolute;
+            bottom: 5px;
+            right: 25px;
+        }
+
+        .buttonInsideGithub {
+            position: absolute;
+            bottom: 5px;
+            right: 100px;
+        }
+
+        .infoContainerE {
+            color: white;
+            text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
+        }
+
+        .label {
+            padding: 25px;
+            border-radius: 10px;
+            opacity: 1;
+        }
+
+        .extraLabel {
+            padding: 25px;
+            border-radius: 10px;
+        }
+
+        .labelH {
+            padding: 25px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .fade-in {
+            transition: opacity 0.7s; /* Slow fade in */
+        }
+
+        .fade-out {
+            transition: opacity 0.2s; /* Fast fade out */
+        }
+
+        .leftButton{
+            position: absolute;
+            bottom: 5px;
+            left: 25px;
+        }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <script type="module" src="/Shaders/AtmoShader.js"></script>
+    <script type="module" src="/Shaders/RingShader.js"></script>
+    <script type="module" src="/Scripts/MathUtils.js"></script>
+    <script type="module" src="/Shaders/PlanetShader.js"></script>
+    <script type="module" src="/Scripts/ModelRender.js"></script>
+    <script type="module">
+        import * as AtmoShader from '/Shaders/AtmoShader.js';
+        import * as RingShader from '/Shaders/RingShader.js';
+        import * as Maths from '/Scripts/MathUtils.js';
+        import * as PlanetShader from '/Shaders/PlanetShader.js';
+        import * as ModelRenderer from '/Scripts/ModelRenderer.js';
+
+        // Disable the default context menu
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Basic Three.js setup
+        var scene = new THREE.Scene();
+
+        var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        var renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('container').appendChild(renderer.domElement);
+
+        function setBackground() {
+            var canvas = document.createElement('canvas');
+            var context = canvas.getContext('2d');
+            canvas.width = 512;
+            canvas.height = 512;
+
+            //var gradient = context.createLinearGradient(0, 0, 0, canvas.height);
+            //gradient.addColorStop(0, '#404040'); // Light grey color at the top
+            //gradient.addColorStop(1, '#000000'); // Darker grey color at the bottom
+
+            var gradient = context.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#000033'); // Deep space blue at the top
+            gradient.addColorStop(0.5, '#1A0026'); // Middle tone for depth
+            gradient.addColorStop(1, '#000000'); // Dark purple at the bottom
+
+            // Apply the gradient as the fill style
+            context.fillStyle = gradient;
+            // Fill the canvas with the gradient
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            var gradientTexture = new THREE.CanvasTexture(canvas);
+            scene.background = gradientTexture
+        }
+
+        function createStarTexture() {
+            var canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            var context = canvas.getContext('2d');
+
+            // Draw a circular star
+            context.beginPath();
+            context.arc(32, 32, 30, 0, 2 * Math.PI);
+            context.fillStyle = 'white';
+            context.fill();
+
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function createStarField() {
+            const starsGeometry = new THREE.BufferGeometry();
+            const starCount = 300;
+
+            const positions = new Float32Array(starCount * 3);
+
+            for (let i = 0; i < starCount; i++) {
+                positions[i * 3 + 0] = (Math.random() - 0.5) * 2000;
+                positions[i * 3 + 1] = (Math.random() - 0.5) * 2000;
+                positions[i * 3 + 2] = (Math.random() - 0.5) * 2000;
+            }
+
+            starsGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+            const starTexture = createStarTexture();
+
+            const starsMaterial = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 3,
+                map: starTexture,
+                transparent: true
+            });
+
+            const starField = new THREE.Points(starsGeometry, starsMaterial);
+
+            return starField;
+        }
+
+        const starField = createStarField();
+        scene.add(starField);
+        setBackground();
+
+        // CSS2DRenderer setup
+        var labelRenderer = new THREE.CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.pointerEvents = 'none'; // Ensure it doesn't block mouse events
+        document.getElementById('container').appendChild(labelRenderer.domElement);
+        // Create a light
+        var directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+        directionalLight.position.copy(new THREE.Vector3(-10, 10, 0));
+        scene.add(directionalLight);
+
+        var labelList = []
+        var divList = []
+        // Load the 3D model
+
+        var objects = []
+
+        var modelLabels = []
+
+        //renderer.gammaOutput = true;
+        //renderer.gammaFactor = 2.2;
+
+        var loader = new THREE.GLTFLoader();
+
+        var planetRotation = [];
+        var selectedObjectIndex;
+
+        function createPlanet(url, position, labels, extras, scale, shaderOffset, numberOfRings, planetOpts) {
+
+            var objectColor;
+            var persistantModel;
+
+            loader.load(url, function (gltf) {
+                var model = gltf.scene;
+                model.position.copy(position);
+
+                persistantModel = model;
+
+                if (scale !== null) {
+                    model.scale.copy(new THREE.Vector3(scale, scale, scale));
+                }
+
+                model.traverse(function (child) {
+                    if (child.isMesh) {
+                        objectColor = child.material.color;
+                    }
+                });
+
+                const planetMaterial = new THREE.ShaderMaterial({
+                    uniforms: PlanetShader.uniforms(planetOpts.intensitiy, calculateModelRadius() + shaderOffset * 0.7, planetOpts.waterMountRatio, planetOpts.color),
+                    vertexShader: PlanetShader.vertexShader(),
+                    fragmentShader: PlanetShader.fragmentShader()
+                });
+
+                // Apply ShaderMaterial to the model
+                model.traverse(function (child) {
+                    if (child.isMesh) {
+                        child.material = planetMaterial;
+                    }
+                });
+
+
+                scene.add(model);
+                objects.push(model);
+                planetRotation.push({ planet: model, rotationType: Maths.getRandomInteger(1, 3) });
+
+                function calculateModelRadius() {
+                    let maxRadius = 0;
+
+                    model.traverse(function (child) {
+                        if (child.isMesh) {
+                            child.geometry.computeBoundingSphere();
+                            const radius = child.geometry.boundingSphere.radius;
+                            if (radius > maxRadius) {
+                                maxRadius = radius;
+                            }
+                        }
+                    });
+
+                    return maxRadius;
+                }
+
+                function addRing(ringNumber, totalRings, rotation, maxRadius, colorScheme) {
+                    const minRingDist = 0.01;
+                    const maxRingDist = 0.3;
+                    const gap = Maths.getRandomFloat(minRingDist, maxRingDist);
+
+                    const baseRadius = calculateModelRadius(model);
+
+                    const maxRingWidth = 1;
+                    const minRingWidth = 0.3; // Base width of the ring
+                    const ringWidth = Maths.getRandomFloat(minRingWidth, maxRingWidth);
+
+                    // Calculate the total radius of all rings
+                    const totalRingWidth = (maxRingWidth + gap) * totalRings;
+                    const totalRadius = baseRadius + totalRingWidth;
+
+                    // Determine if scaling is needed
+                    const scaleFactor = totalRadius > maxRadius * scale ? maxRadius * scale / totalRadius : 1;
+
+                    const innerRadius = baseRadius + ringNumber * (ringWidth + gap) * scaleFactor; // Increase distance from the center
+                    const outerRadius = innerRadius + ringWidth * scaleFactor; // Adjust width for each ring
+
+                    // Create the shader material Texture version
+                    const ringMaterialTexture = new THREE.ShaderMaterial({
+                        uniforms: RingShader.uniformsRingTexture(colorScheme, 0.1),
+                        vertexShader: RingShader.vertexShaderRingTexture(),
+                        fragmentShader: RingShader.fragShaderRingTexture(),
+                        transparent: true,
+                        side: THREE.DoubleSide,
+                    });
+
+                    // Create the shader material pixel version
+                    const ringMaterialPixel = new THREE.ShaderMaterial({
+                        uniforms: RingShader.uniformsRingPixel(colorScheme),
+                        vertexShader: RingShader.vertexShaderRingPixel(),
+                        fragmentShader: RingShader.fragShaderRingPixel(),
+                        transparent: true,
+                        side: THREE.DoubleSide,
+                    });
+
+                    const ringGeometry = new THREE.RingGeometry(innerRadius, outerRadius, 64);
+                    const ringMesh = new THREE.Mesh(ringGeometry, ringMaterialPixel);
+
+                    // Position the ring around the model
+                    ringMesh.position.set(0, 0, 0);
+                    ringMesh.rotation.copy(rotation);
+
+                    ringMesh.traverse(function (child) {
+                        child.raycast = function () { return null; };
+                    });
+
+                    // Add the ring to the model
+                    model.add(ringMesh);
+                }
+
+                // Generate random rotation angles
+                const randomRotationX = Math.random() * Math.PI * 2;
+                const randomRotationY = Math.random() * Math.PI * 2;
+                const randomRotationZ = Math.random() * Math.PI * 2;
+
+                // Create a THREE.Euler object
+                const rotation = new THREE.Euler(randomRotationX, randomRotationY, randomRotationZ);
+
+                for (let i = 1; i < numberOfRings + 1; i++) {
+                    addRing(i, numberOfRings, rotation, 2, 0x74ebd5);
+                }
+
+                var tempLabels = []
+
+                labels.forEach(labelData => {
+                    var div = document.createElement('div');
+                    div.className = 'label';
+                    div.innerHTML = labelData.html;
+                    var label = new THREE.CSS2DObject(div);
+                    label.position.copy(new THREE.Vector3(labelData.position.x + position.x, labelData.position.y + position.y, labelData.position.z + position.z));
+                    //model.add(label);
+                    scene.add(label);
+
+                    // Attach event listeners to buttons
+                    div.querySelectorAll('.buttonInside').forEach(button => {
+                        button.addEventListener('click', function (event) {
+                            event.stopPropagation(); // Prevent the click from propagating to the canvas
+                            window.location.href = labelData.url;
+                        });
+                    });
+
+                    div.querySelectorAll('.buttonInsideGithub').forEach(button => {
+                        button.addEventListener('click', function (event) {
+                            event.stopPropagation(); // Prevent the click from propagating to the canvas
+                            window.open(labelData.githubUrl, '_blank');
+                        });
+                    });
+
+                    label.raycast = function () { return null; };
+                    labelList.push(label);
+                    tempLabels.push(div);
+                    divList.push(div);
+                });
+
+                modelLabels.push(tempLabels);
+                //class = extraLabel
+                extras.forEach(data => {
+                    var div = document.createElement('div');
+                    div.className = 'extraLabel';
+                    div.innerHTML = data.html;
+                    var label = new THREE.CSS2DObject(div);
+                    label.position.copy(new THREE.Vector3(data.position.x + position.x, data.position.y + position.y, data.position.z + position.z));
+                    label.raycast = function () { return null; };
+                    scene.add(label);
+                })
+            }, undefined, function (error) {
+                console.error(error);
+            });
+
+            loader.load('/MainStaticObjects/shader.glb', function (gltf) {
+                //atmo object
+                var modelAtmo = gltf.scene;
+                modelAtmo.position.copy(new THREE.Vector3(0, 0, 0));
+
+                if (scale !== null) {
+                    modelAtmo.scale.copy(new THREE.Vector3(scale + shaderOffset, scale + shaderOffset, scale + shaderOffset));
+                }
+
+                if (objectColor == null) {
+                    modelAtmo.traverse(function (child) {
+                        if (child.isMesh) {
+                            objectColor = child.material.color;
+                        }
+                    });
+                }
+
+                // Create ShaderMaterial
+                var AtmoShaderMaterial = new THREE.ShaderMaterial({
+                    uniforms: AtmoShader.uniformsAtmo(new THREE.Color(planetOpts.color)),
+                    vertexShader: AtmoShader.vertexShaderAtmo(),
+                    fragmentShader: AtmoShader.fragShaderAtmo(),
+                    blending: THREE.AdditiveBlending,
+                    transparent: true,
+                });
+
+                // Apply ShaderMaterial to the model
+                modelAtmo.traverse(function (child) {
+                    if (child.isMesh) {
+                        child.material = AtmoShaderMaterial;
+                        // Make the object invisible to raycasts
+                        child.raycast = function () { return null; };
+                    }
+                });
+
+                persistantModel.add(modelAtmo);
+            }, undefined, function (error) {
+                console.error(error);
+            });
+        }
+
+        function getRandomColor() {
+            var letters = '0123456789ABCDEF';
+            var color = '#';
+            for (var i = 0; i < 6; i++) {
+              color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        //create rocket  (used fro selecting the planet fly to the planet to select)
+        //var rocket;
+
+        @*ModelRenderer.renderStandardModel(loader, scene, '/MainStaticObjects/rocket.glb', new THREE.Vector3(0, 0, 0), 0.2)
+            .then(model => {
+                rocket = model;
+            })
+            .catch(error => {
+                console.error('Error loading model:', error);
+            });
+
+        // Apply ShaderMaterial to the model
+        
+
+        var verticalInput = 0;
+        var horizontalInput = 0;
+        var accelInput = 0
+        var distanceSelectVal = 10;
+
+        document.addEventListener('keydown', function (event) {
+            switch (event.keyCode) {
+                case 87: // W
+                    verticalInput = 1;
+                    break;
+                case 65: // A
+                    horizontalInput = 1;
+                    break;
+                case 83: // S
+                    verticalInput = -1;
+                    break;
+                case 68: // D
+                    horizontalInput = -1;
+                    break;
+                case 81: // Q
+                    accelInput = -1;
+                    break;
+                case 69: // E
+                    accelInput = 1;
+                    break;
+            }
+        });
+
+        document.addEventListener('keyup', function (event) {
+            switch (event.keyCode) {
+                case 87: // W
+                case 83: // S
+                    verticalInput = 0;
+                    break;
+                case 65: // A
+                case 68: // D
+                    horizontalInput = 0;
+                    break;
+                case 81: // Q
+                case 69: // E
+                    accelInput = 0;
+                    break;
+            }
+        });
+
+        function RocketControlls(){
+            if (verticalInput !== 0) {
+                var pitchAxis = new THREE.Vector3(1, 0, 0);
+                pitchAxis.applyQuaternion(rocket.quaternion);
+                rocket.rotateOnWorldAxis(pitchAxis, verticalInput * 0.01);
+            }
+
+            if (horizontalInput !== 0) {
+                var yawAxis = new THREE.Vector3(0, 1, 0);
+                yawAxis.applyQuaternion(rocket.quaternion);
+                rocket.rotateOnWorldAxis(yawAxis, horizontalInput * 0.01);
+            }
+
+            if (accelInput !== 0) {
+                var direction = new THREE.Vector3(0, 0, -1);
+                direction.applyQuaternion(rocket.quaternion);
+                rocket.position.addScaledVector(direction, accelInput * 0.1);
+            }
+        }
+
+        //end rocket creation*@
+
+        //model 1
+        createPlanet('/MainStaticObjects/planetTest.glb', new THREE.Vector3(1, 2, 0), [
+            {
+                html: `
+                                            <div class='infoContainer'>
+                                                <div class='infoContent'>
+                                                    <h2>Projects</h2>
+                                                    <p>A list of projects I have worked on.</p>
+                                                </div>
+                                                <button class='buttonInside'>Projects</button>
+                                                <button class='buttonInsideGithub'>Github</button>
+                                            </div>
+                                        `,
+                position: new THREE.Vector3(-3, 2, -2),
+                url: '/Projects',
+                githubUrl: 'https://github.com/wishinggem?tab=repositories'
+            }
+        ],
+            [
+                {
+                    html: `
+                                                <div class='infoContainerE'>
+                                                            <div class='infoContent'>
+                                                                    <h2>Main</h2>
+                                                        </div>
+                                                </div>
+                                                `,
+                    position: new THREE.Vector3(0, 3, 0)
+                }
+            ], 1, 0.1, 0, {
+                intensitiy: 2,
+                waterMountRatio: 0.3,
+                color: getRandomColor()//0x90b7de
+            });
+
+        //model 2
+        createPlanet('/MainStaticObjects/planetTest.glb', new THREE.Vector3(-8, 3, 5), [
+            {
+                html: `
+                                                    <div class='infoContainer'>
+                                                        <div class='infoContent'>
+                                                            <h2>Privacy</h2>
+                                                            <p>Opens The Privacy Page.</p>
+                                                        </div>
+                                                        <button class='buttonInside'>Privacy</button>
+                                                    </div>
+                                                `,
+                position: new THREE.Vector3(-2, 1, -1),
+                url: '/Privacy'
+            },
+            {
+                html: `
+                                                            <div class='infoContainer'>
+                                                                <div class='infoContent'>
+                                                                    <h2>Accounts</h2>
+                                                                    <p>Create Login and Manage Accounts         </p>
+                                                                </div>
+                                                                <button class='buttonInside'>Login</button>
+                                                                <button class='buttonInsideGithub'>Create</button>
+                                                                <a class='leftButton' href='/Accounts/Profile'><button>Profile</button></a>
+                                                            </div>
+                                                        `,
+                position: new THREE.Vector3(2, 1, 1),
+                url: '/AccountLogin',
+                githubUrl: '/AccountCreation'
+            },
+        ],
+            [
+                {
+                    html: `
+                                                                <div class='infoContainerE'>
+                                                                            <div class='infoContent'>
+                                                                                    <h2>Extras</h2>
+                                                                        </div>
+                                                                </div>
+                                                                `,
+                    position: new THREE.Vector3(0, 3, 0)
+                }
+            ], 1, 0.1, Maths.getRandomInteger(0, 2), {
+            intensitiy: 1,
+            waterMountRatio: 0.1,
+            color: getRandomColor()//0xdeb762
+        });
+
+        //model3
+        createPlanet('/MainStaticObjects/planetTest.glb', new THREE.Vector3(6, 1, -5), [
+            {
+                html: `
+                                                    <div class='infoContainer'>
+                                                        <div class='infoContent'>
+                                                            <h2>SMB</h2>
+                                                            <p>Connects to a directory <br> or SMB share and displays the directories.</p>
+                                                        </div>
+                                                        <button class='buttonInside'>SMB</button>
+                                                    </div>
+                                                `,
+                position: new THREE.Vector3(3, 1, 2),
+                url: '/SMBStart'
+            }
+        ],
+            [
+                {
+                    html: `
+                                                        <div class='infoContainerE'>
+                                                                    <div class='infoContent'>
+                                                                            <h2>Tools</h2>
+                                                                </div>
+                                                        </div>
+                                                        `,
+                    position: new THREE.Vector3(0, 3, 0)
+                }
+            ], 1, 0.1, Maths.getRandomInteger(0, 8), {
+            intensitiy: 1.5,
+            waterMountRatio: 0.2,
+            color: getRandomColor()//0xd957a9
+        });
+
+        const sunPosition = new THREE.Vector3(0, 0, 0);
+
+        // Set initial camera position and controls
+        camera.position.set(5, 3, 10);
+        var controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.25;
+        controls.rotateSpeed = 0.35;
+        controls.screenSpacePanning = true; // Enable panning
+
+        // Map mouse buttons
+        controls.mouseButtons = {
+            MIDDLE: THREE.MOUSE.PAN,
+            RIGHT: THREE.MOUSE.ROTATE
+        };
+
+        var raycaster = new THREE.Raycaster();
+        var labelPosition = new THREE.Vector3();
+
+        function updateLabelVisibility(element, div) {
+            labelPosition.setFromMatrixPosition(element.matrixWorld);
+            raycaster.set(camera.position, labelPosition.sub(camera.position).normalize());
+
+            var intersects = raycaster.intersectObjects(scene.children, true);
+
+            if (intersects.length > 0 && intersects[0].object !== element) {
+                div.classList.remove('fade-in');
+                div.classList.add('fade-out');
+                div.style.opacity = '0'; // Fade out the label if it is occluded
+            }
+            else {
+                div.classList.remove('fade-out');
+                div.classList.add('fade-in');
+                div.style.opacity = '1'; // Fade in the label if it is not occluded
+            }
+        }
+
+        var raycasterMouse = new THREE.Raycaster();
+        var mouse = new THREE.Vector2();
+        var selectedObject = null;
+
+        selectedObjectIndex = 0;
+
+        function showSelectedLabels() {
+            var i = 0;
+            modelLabels.forEach(label => {
+                if (i === selectedObjectIndex) {
+                    modelLabels[i].forEach(div => {
+                        div.className = 'label';
+                        div.style.pointerEvents = 'auto';
+                    });
+                }
+                else {
+                    modelLabels[i].forEach(div => {
+                        div.className = 'labelH';
+                        div.style.pointerEvents = 'none';
+                    });
+                }
+
+                i += 1;
+            })
+        }
+
+        function onMouseClick(event) {
+            // Calculate mouse position in normalized device coordinates
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            // Update the raycaster with the mouse position and camera
+            raycasterMouse.setFromCamera(mouse, camera);
+
+            // Intersect objects in the scene
+            var intersects = raycasterMouse.intersectObjects(objects, true);
+
+            if (intersects.length > 0) {
+                selectedObject = intersects[0].object.parent;
+
+                selectedObjectIndex = objects.indexOf(selectedObject);
+
+                showSelectedLabels();
+
+                var currentCameraPosition = camera.position.clone();
+
+                // Pan camera to the selected object
+                var targetPosition = new THREE.Vector3();
+                selectedObject.getWorldPosition(targetPosition);
+
+                var newCameraPosition = targetPosition.clone().add(new THREE.Vector3(5, 3, 10)); // Adjust the offset as needed
+                gsap.to(camera.position, {
+                    duration: 1.5,
+                    x: newCameraPosition.x,
+                    y: newCameraPosition.y,
+                    z: newCameraPosition.z,
+                    onUpdate: function () {
+                        camera.lookAt(targetPosition);
+                    },
+                });
+
+                gsap.to(controls.target, {
+                    duration: 1.5,
+                    x: targetPosition.x,
+                    y: targetPosition.y,
+                    z: targetPosition.z
+                });
+
+                // Update controls to look at the selected object
+                controls.update();
+            }
+        }
+
+        //rocket selection
+        function closestPlanetCalcs() {
+            var closestDistance = Infinity;
+            var closestObject = null;
+
+            objects.forEach(function (model) {
+                var distance = rocket.position.distanceTo(model.position);
+                if (distance < distanceSelectVal && distance < closestDistance) {
+                    closestDistance = distance;
+                    closestObject = model;
+                }
+            });
+
+            selectedObject = closestObject;
+            selectedObjectIndex = objects.indexOf(selectedObject);
+        }
+
+
+        window.addEventListener('click', onMouseClick, false);
+
+        // Ensure both renderers update properly
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+            labelRenderer.render(scene, camera);
+
+            starField.position.copy(camera.position);
+
+            //RocketControlls();
+            //closestPlanetCalcs();
+            showSelectedLabels();
+
+            for (let index = 0; index < labelList.length; ++index) {
+                updateLabelVisibility(labelList[index], divList[index]);
+            }
+
+            planetRotation.forEach((obj) => {
+                if (obj.rotationType === 1) {
+                    obj.planet.rotation.x += 0.0005
+                }
+                else if (obj.rotationType === 2) {
+                    obj.planet.rotation.y += 0.0005
+                }
+                else if (obj.rotationType === 3) {
+                    obj.planet.rotation.z += 0.0005
+                }
+            });
+        }
+        animate();
+
+        window.onload = function () {
+            selectedObjectIndex = 0;
+            showSelectedLabels();
+        }
+
+        window.addEventListener('resize', function () {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>

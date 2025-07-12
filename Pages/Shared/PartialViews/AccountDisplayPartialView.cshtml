@@ -1,0 +1,59 @@
+﻿@using Microsoft.AspNetCore.Http
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
+<style>
+    .icon{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: absolute;
+        right: 20px;
+        top: 8px;
+    }
+
+    .iconImg img{
+        width: 32px;
+        height: 32px;
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+    .subIcon{
+        position: relative;
+        
+    }
+
+    .text{
+        padding-right: 10px;
+    }
+
+    .button{
+        border: none;
+        background: none;
+    }
+</style>
+
+<div>
+
+    @{
+        string iconSource = "/MainStaticImages/iconUnauth.png";
+        string username = "Not Logged In";
+        if (HttpContextAccessor.HttpContext.Session.GetString("login") == "true")
+        {
+            iconSource = "/MainStaticImages/iconAuth.png";
+            username = HttpContextAccessor.HttpContext.Session.GetString("account");
+        }
+    }
+
+    <div class="icon">
+        <div class="iconImg">
+            <button class="button" type="submit" id="profile" onclick="openProfile()">@username <img src=@iconSource /></button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openProfile(){
+        window.location.href = '/Accounts/Profile';
+    }
+</script>

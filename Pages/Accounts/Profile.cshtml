@@ -1,0 +1,119 @@
+﻿@page
+@model PersonalUniversalSite.Pages.Accounts.ProfileModel
+@using Microsoft.AspNetCore.Http
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    ViewData["Title"] = "Profile";
+}
+
+<title>@ViewData["Title"]</title>
+
+<style>
+    .logout{
+        position: relative;
+        left: 505px;
+    }
+
+    .actions{
+        border: solid;
+        padding: 10px;
+        border-color: black;
+        border-radius: 24px;
+        width: 600px;
+    }
+
+    .modify{
+        margin: 10px;
+        padding: 10px;
+        border: solid;
+        border-color: darkred;
+        border-radius: 14px;
+        width: 300px;
+    }
+</style>
+
+<body>
+    <br />
+    <br />
+    <p>Please Note That Profile Services Are Currently Unavailable</p>
+    <div>
+        @{
+            string iconSource = "/MainStaticImages/iconUnauth.png";
+            string username = "Not Logged In";
+            string email = "Not Logged In";
+            string info = "";
+            if (HttpContextAccessor.HttpContext.Session.GetString("login") == "true")
+            {
+                iconSource = "/MainStaticImages/iconAuth.png";
+                username = HttpContextAccessor.HttpContext.Session.GetString("account");
+                email = HttpContextAccessor.HttpContext.Session.GetString("email");
+                info = HttpContextAccessor.HttpContext.Session.GetString("info");
+            }
+        }
+
+        <img src=@iconSource />
+        <br />
+        <p>Username: @username</p>
+        <br />
+        <p>Email: @email</p>
+        <br />
+        <p>Info: @info</p>
+    </div>
+
+    <br />
+    <br />
+
+    <div class="actions">
+        <div class="modify">
+
+            @if (HttpContextAccessor.HttpContext.Session.GetString("login") == "true")
+            {
+                <form method="post" enctype="multipart/form-data" asp-page-handler="Modify">
+                    <button type="submit" id="mod" disabled="true" onclick="openMod()">Modify Account</button>
+                </form>
+
+                <br />
+
+                <form method="post" enctype="multipart/form-data" asp-page-handler="Delete">
+                    <button type="submit" id="download">Delete Account</button>
+                </form>
+            }
+            else
+            {
+                <form method="post" enctype="multipart/form-data" asp-page-handler="Modify">
+                    <button type="submit" id="mod" disabled="true" onclick="openMod()">Modify Account</button>
+                </form>
+
+                <br />
+
+                <form method="post" enctype="multipart/form-data" asp-page-handler="Delete">
+                    <button type="submit" id="download" disabled="true">Delete Account</button>
+                </form>
+            }
+        </div>
+
+        <br />
+
+        @if (HttpContextAccessor.HttpContext.Session.GetString("login") == "true")
+        {
+            <form method="post" enctype="multipart/form-data" asp-page-handler="Logout" class="logout">
+                <button type="submit" id="download">Logout</button>
+            </form>
+        }
+        else
+        {
+            <form method="post" enctype="multipart/form-data" asp-page-handler="Logout" class="logout">
+                <button type="submit" id="download" disabled="true">Logout</button>
+            </form>
+        }
+    </div>
+
+    <br />
+    <br />
+</body>
+
+<script>
+    function openMod() {
+        window.location.href = '/Accounts/ModifyAccount'
+    }
+</script>

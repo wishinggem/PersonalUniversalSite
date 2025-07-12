@@ -1,0 +1,90 @@
+﻿@page
+@model PersonalUniversalSite.Pages.SMBConnectionModel
+@{
+    string arrowIcon = "<-";
+}
+
+<title>@ViewData["Title"]</title>
+<h1>@ViewData["workingPath"]</h1>
+
+<style>
+    .DirIcon img{
+        max-width: 200px;
+        width: auto;
+        height: auto;
+    }
+
+    .FileIcon img {
+        max-width: 200px;
+        width: auto;
+        height: auto;
+    }
+    
+    .DirButton{
+        border: none;
+        cursor: pointer;
+        appearance: none;
+        background-color: inherit;
+    }
+</style>
+
+<body>
+    <br />
+    <br />
+    <form method="post" enctype="multipart/form-data" asp-page-handler="NavUp">
+        <button type="submit"><img class="DirIcon" width="25" src="~/MainStaticImages/navigate-up-arrow.svg" alt="directorIcon" /></button>
+    </form>
+
+    @{
+        List<DirectoryInfo> directories = ViewData["ViewDirectories"] as List<DirectoryInfo>;
+        List<FileInfo> files = ViewData["ViewFiles"] as List<FileInfo>;
+        string ConvertSize(long size)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            double len = size;
+            int order = 0;
+            while (len >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                len = len / 1024;
+            }
+
+            // Adjust the format string to your preferences. For example "{0:0.#}{1}" would
+            // show a single decimal place, and no space.
+            return String.Format("{0:0.##} {1}", len, sizes[order]);
+        }
+    }
+    @foreach (DirectoryInfo directory in directories)
+    {
+        <button class="DirButton" type="submit" onclick="GetSubDir('@directory.Name')"><img class="DirIcon" width="25" src="~/MainStaticImages/dirIcon.png" alt="directorIcon" />@directory.Name</button> <button type="submit" onclick="DownloadDirectory('@directory.Name')">Download</button>
+        <br />
+    }
+
+    @foreach (FileInfo file in files)
+    {
+        string[] fileSplit = file.FullName.Replace("\\", "/").Split("/");
+        <button class="DirButton" type="submit" onclick="DownloadFile('@fileSplit[fileSplit.Length - 1]')"><img class="FileIcon" width="25" src="~/MainStaticImages/fileicon.png" alt="fileIcon" />@fileSplit[fileSplit.Length - 1] {@ConvertSize(file.Length)}</button>
+        <br />
+    }
+    <br />
+
+    <form method="post" enctype="multipart/form-data" asp-page-handler="DownloadFile">
+        <button type="submit" id="download"><img class="DirIcon" width="25" src="~/MainStaticImages/navigate-up-arrow.svg" alt="directorIcon" />Download: </button><input type="text" id="fileName" name="fileName" />
+    </form>
+</body>
+
+<script>
+    var selectedFiles = [];
+
+    function GetSubDir(dirName) {
+        window.location.href = "SMBConnection?workingPath=" + dirName;
+    }
+    
+    function DownloadFile(fileName) {
+        document.getElementById('fileName').value = fileName;
+    }
+
+    function DownloadDirectory(fileName) {
+        document.getElementById('fileName').value = "f" + fileName;
+    }
+</script>
