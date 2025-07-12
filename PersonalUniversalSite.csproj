@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\DownloadDirs\data\" />
-    <Folder Include="wwwroot\Libraries\Manga\Covers\" />
     <Folder Include="wwwroot\Scripts\" />
     <Folder Include="wwwroot\Shaders\" />
   </ItemGroup>

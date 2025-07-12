@@ -27,11 +27,6 @@ namespace PersonalUniversalSite.Pages.Tools.Libraries
 
         public async Task OnGetAsync()
         {
-            if ((DateTime.Now - System.IO.File.GetCreationTime(cachePath)).TotalDays >= 10)
-            {
-                DeleteCache();
-            }
-
             var session = HttpContext.Session;
             var userId = session.GetString("loggedInAccountID");
 
@@ -83,12 +78,12 @@ namespace PersonalUniversalSite.Pages.Tools.Libraries
                                 {
                                     m.CoverImageUrl = $"https://{Request.Host.Host}/MainStaticImages/Simple_Manga.png";
                                 }
-                                DeleteCache();
+                                DeleteFromCache(m);
                             }
                         }
                         else
                         {
-                            if (count < 60)
+                            if (count < 40)
                             {
                                 var mangaTask = Task.Run(async () =>
                                 {
@@ -137,6 +132,8 @@ namespace PersonalUniversalSite.Pages.Tools.Libraries
                                         cachedManga.publicationStatus = ExtractStatusFromJson(m);
                                         var publishedCount = await GetAndSetPublishEnglishChapters(m);
                                         cachedManga.pulishedChapterCount = publishedCount;
+                                        cachedManga.dateAdded = DateTime.Now;
+                                        cachedManga.managaId = ExtractMangaIdFromUrl(m.Link);
 
                                         if (!fail)
                                         {
@@ -188,6 +185,8 @@ namespace PersonalUniversalSite.Pages.Tools.Libraries
                                         cachedManga.publicationStatus = ExtractStatusFromJson(m);
                                         var publishedCount = await GetAndSetPublishEnglishChapters(m);
                                         cachedManga.pulishedChapterCount = publishedCount;
+                                        cachedManga.dateAdded = DateTime.Now;
+                                        cachedManga.managaId = ExtractMangaIdFromUrl(m.Link);
 
                                         if (!fail)
                                         {
@@ -604,7 +603,7 @@ namespace PersonalUniversalSite.Pages.Tools.Libraries
             if (manga.MangaJsonData == null)
             {
                 manga.publicationStatus = "unknown";
-                return null;
+                return "unknown";
             }
 
             var status = manga.MangaJsonData["data"]?["attributes"]?["status"]?.ToString();
@@ -713,7 +712,7 @@ namespace PersonalUniversalSite.Pages.Tools.Libraries
             }
         }
 
-        public void DeleteCache()
+        public void DeleteFromCache(MangaEntry manga)
         {
             if (System.IO.File.Exists(cachePath))
             {
@@ -723,18 +722,10 @@ namespace PersonalUniversalSite.Pages.Tools.Libraries
             if (!Directory.Exists(coverRootPath))
                 return;
 
-            var files = Directory.GetFiles(coverRootPath);
-
-            foreach (var file in files)
+            var cache = JsonHandler.DeserializeJsonFile<CachedMangaCollection>(cachePath);
+            if (cache.cache.ContainsKey(ExtractMangaIdFromUrl(manga.Link)))
             {
-                try
-                {
-                    System.IO.File.Delete(file);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Failed to delete {file}: {ex.Message}");
-                }
+                cache.cache.Remove(ExtractMangaIdFromUrl(manga.Link));
             }
         }
 
@@ -956,11 +947,13 @@ public class MangaEntry
 [Serializable]
 public class CachedManga
 {
+    public string managaId { get; set; }
     public string altTitle { get; set; }
     public List<string> genres { get; set; } = new List<string>();
     public string publicationStatus { get; set; }
     public string coverPhotoPath { get; set; }
     public int pulishedChapterCount { get; set; }
+    public DateTime dateAdded { get; set; } = DateTime.Now;
 }
 
 [Serializable]
