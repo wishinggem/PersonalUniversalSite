@@ -235,7 +235,6 @@ namespace PersonalUniversalSite.Pages.Tools.Libraries
         private void SetMangaDefaults(MangaEntry m)
         {
             m.CoverImageUrl = "/MainStaticImages/Simple_Manga.png"; // or null
-            m.MangaJsonData = (JObject?)"{}";
             m.AltTitle = "unknown";
             m.Genres = new List<string>();
             m.publicationStatus = "unknown";
