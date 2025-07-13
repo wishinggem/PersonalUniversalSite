@@ -111,7 +111,6 @@ namespace PersonalUniversalSite.Pages.Tools.Libraries
                                             {
                                                 cachedManga.coverPhotoPath = $"https://{Request.Host.Host}/Libraries/Manga/Covers/{coverFilename}";
                                             }
-                                            fail = false;
                                         }
                                         else
                                         {
@@ -122,15 +121,16 @@ namespace PersonalUniversalSite.Pages.Tools.Libraries
                                         {
                                             fail = true;
                                         }
-                                        else
-                                        {
-                                            fail = false;
-                                        }
                                         m.MangaJsonData = jsonData;
                                         cachedManga.altTitle = ExtractAndSetAltTitle(m);
                                         cachedManga.genres = ExtractGenresFromJson(m);
                                         cachedManga.publicationStatus = ExtractStatusFromJson(m);
                                         var publishedCount = await GetAndSetPublishEnglishChapters(m);
+                                        if (publishedCount == -1)
+                                        {
+                                            fail = true;
+                                            publishedCount = 0;
+                                        }
                                         cachedManga.pulishedChapterCount = publishedCount;
                                         cachedManga.dateAdded = DateTime.Now;
                                         cachedManga.managaId = ExtractMangaIdFromUrl(m.Link);
@@ -164,7 +164,6 @@ namespace PersonalUniversalSite.Pages.Tools.Libraries
                                             {
                                                 cachedManga.coverPhotoPath = $"https://{Request.Host.Host}/Libraries/Manga/Covers/{coverFilename}";
                                             }
-                                            fail = false;
                                         }
                                         else
                                         {
@@ -175,15 +174,16 @@ namespace PersonalUniversalSite.Pages.Tools.Libraries
                                         {
                                             fail = true;
                                         }
-                                        else
-                                        {
-                                            fail = false;
-                                        }
                                         m.MangaJsonData = jsonData;
                                         cachedManga.altTitle = ExtractAndSetAltTitle(m);
                                         cachedManga.genres = ExtractGenresFromJson(m);
                                         cachedManga.publicationStatus = ExtractStatusFromJson(m);
                                         var publishedCount = await GetAndSetPublishEnglishChapters(m);
+                                        if (publishedCount == -1)
+                                        {
+                                            fail = true;
+                                            publishedCount = 0;
+                                        }
                                         cachedManga.pulishedChapterCount = publishedCount;
                                         cachedManga.dateAdded = DateTime.Now;
                                         cachedManga.managaId = ExtractMangaIdFromUrl(m.Link);
@@ -796,7 +796,7 @@ namespace PersonalUniversalSite.Pages.Tools.Libraries
             }
 
             manga.pulishedChapterCount = 0;
-            return 0; // fallback on error
+            return -1; // fallback on error
         }
 
         public IActionResult OnPostInramentReadChapters(string title)
