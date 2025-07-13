@@ -8,6 +8,7 @@
     var planToReadList = mangaList.Where(m => m?.Status == "PlanToRead").ToList();
     var uptoDateList = mangaList.Where(m => m?.Status == "UptoDateWithRelease").ToList();
     var onholdList = mangaList.Where(m => m?.Status == "Onhold").ToList();
+    var droppedList = mangaList.Where(m => m?.Status == "Dropped").ToList();
 
     // Helper to get genres as single lowercase string for data attribute
     string GetGenresString(List<string> genres) => genres != null ? string.Join(", ", genres).ToLower() : "";
@@ -246,6 +247,7 @@
                                                     <option value="PlanToRead" selected="@(manga.Status == "PlanToRead")">📝 Plan to Read</option>
                                                     <option value="UptoDateWithRelease" selected="@(manga.Status == "UptoDateWithRelease")">⏳ Up to Date</option>
                                                     <option value="Onhold" selected="@(manga.Status == "Onhold")">⏸️ On Hold</option>
+                                                    <option value="Dropped" selected="@(manga.Status == "Dropped")">⛔ Dropped</option>
                                                 </select>
                                             </form>
                                             <button type="button"
@@ -378,6 +380,7 @@
                                                     <option value="PlanToRead" selected="@(manga.Status == "PlanToRead")">📝 Plan to Read</option>
                                                     <option value="UptoDateWithRelease" selected="@(manga.Status == "UptoDateWithRelease")">⏳ Up to Date</option>
                                                     <option value="Onhold" selected="@(manga.Status == "Onhold")">⏸️ On Hold</option>
+                                                    <option value="Dropped" selected="@(manga.Status == "Dropped")">⛔ Dropped</option>
                                                 </select>
                                             </form>
                                             <button type="button"
@@ -512,6 +515,7 @@
                                                 <option value="PlanToRead" selected="@(manga.Status == "PlanToRead")">📝 Plan to Read</option>
                                                 <option value="UptoDateWithRelease" selected="@(manga.Status == "UptoDateWithRelease")">⏳ Up to Date</option>
                                                 <option value="Onhold" selected="@(manga.Status == "Onhold")">⏸️ On Hold</option>
+                                                <option value="Dropped" selected="@(manga.Status == "Dropped")">⛔ Dropped</option>
                                             </select>
                                         </form>
                                         <button type="button"
@@ -646,6 +650,7 @@
                                                 <option value="PlanToRead" selected="@(manga.Status == "PlanToRead")">📝 Plan to Read</option>
                                                 <option value="UptoDateWithRelease" selected="@(manga.Status == "UptoDateWithRelease")">⏳ Up to Date</option>
                                                 <option value="Onhold" selected="@(manga.Status == "Onhold")">⏸️ On Hold</option>
+                                                <option value="Dropped" selected="@(manga.Status == "Dropped")">⛔ Dropped</option>
                                             </select>
                                         </form>
                                         <button type="button"
@@ -670,73 +675,77 @@
 
         <br />
 
-        <!-- On Hold -->
+        <!-- On Hold / dropped sections -->
         <div class="bg-white p-4 rounded shadow">
             <button type="button"
                     onclick="toggleList('onHoldListContent')"
                     class="w-full flex items-center justify-between text-left text-xl font-semibold mb-4 text-gray-800 hover:text-blue-600 focus:outline-none">
-                ⏸️ On Hold / 
+                ⏸️ On Hold / ⛔ Dropped
                 <span id="onHoldToggleIcon" class="transition-transform duration-200">▲</span>
             </button>
 
             <div id="onHoldListContent" class="transition-all duration-300 ease-in-out">
 
-                @if (onholdList.Any())
-                {
-                    <div class="scrollable-list max-h-72 overflow-y-auto">
-                        <ul id="readList" class="space-y-4">
-                            @foreach (var manga in onholdList)
-                            {
-                                <li class="relative border-b pb-3"
-                                    data-genres="@GetGenresString(manga.Genres)"
-                                    data-fav="@manga.favourite.ToString().ToLower()">
+                <!-- On hold -->
 
-                                    <!-- ⭐ Favourite Toggle Star -->
-                                    <form method="post" asp-page-handler="ToggleFav"
-                                          class="absolute top-2 right-2 z-10">
-                                        <input type="hidden" name="title" value="@manga.Title" />
-                                        <button type="submit" class="fav-toggle-btn">
-                                            <span class="star @(manga.favourite ? "fav" : "not-fav")">★</span>
-                                        </button>
-                                    </form>
+                <div class="bg-white p-4 rounded shadow">
+                    <h2 class="text-xl font-semibold mb-4">⏸️ On Hold</h2>
+                    @if (onholdList.Any())
+                    {
+                        <div class="scrollable-list max-h-72 overflow-y-auto">
+                            <ul id="readList" class="space-y-4">
+                                @foreach (var manga in onholdList)
+                                {
+                                    <li class="relative border-b pb-3"
+                                        data-genres="@GetGenresString(manga.Genres)"
+                                        data-fav="@manga.favourite.ToString().ToLower()">
 
-                                    <!-- Main Manga Content -->
-                                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mt-6 md:mt-0">
-                                        <div class="flex space-x-2">
-                                            <img src="@manga.CoverImageUrl" alt="Cover for @manga.Title" class="w-12 h-16 object-cover rounded shadow manga-cover" referrerpolicy="no-referrer" />
-                                            <div>
-                                                <a href="@manga.Link" target="_blank" class="text-lg font-semibold text-blue-600 hover:underline">@manga.Title</a>
-                                                @if (!string.IsNullOrEmpty(manga.AltTitle))
-                                                {
-                                                    <p class="text-sm text-gray-500 mt-0.5">@manga.AltTitle</p>
-                                                }
-                                                <!-- Genres -->
+                                        <!-- ⭐ Favourite Toggle Star -->
+                                        <form method="post" asp-page-handler="ToggleFav"
+                                              class="absolute top-2 right-2 z-10">
+                                            <input type="hidden" name="title" value="@manga.Title" />
+                                            <button type="submit" class="fav-toggle-btn">
+                                                <span class="star @(manga.favourite ? "fav" : "not-fav")">★</span>
+                                            </button>
+                                        </form>
+
+                                        <!-- Main Manga Content -->
+                                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mt-6 md:mt-0">
+                                            <div class="flex space-x-2">
+                                                <img src="@manga.CoverImageUrl" alt="Cover for @manga.Title" class="w-12 h-16 object-cover rounded shadow manga-cover" referrerpolicy="no-referrer" />
                                                 <div>
-                                                    <strong>Genres:</strong>
-                                                    @if (manga.Genres?.Any() == true)
+                                                    <a href="@manga.Link" target="_blank" class="text-lg font-semibold text-blue-600 hover:underline">@manga.Title</a>
+                                                    @if (!string.IsNullOrEmpty(manga.AltTitle))
                                                     {
-                                                        <ul class="flex flex-wrap gap-2 mt-1">
-                                                            @foreach (var genre in manga.Genres)
-                                                            {
-                                                                <li class="bg-purple-200 text-purple-800 px-2 py-0.5 rounded text-xs font-semibold">
-                                                                    @genre
-                                                                </li>
-                                                            }
-                                                        </ul>
+                                                        <p class="text-sm text-gray-500 mt-0.5">@manga.AltTitle</p>
                                                     }
-                                                    else
-                                                    {
-                                                        <span class="text-gray-500 text-xs italic">No genres listed</span>
-                                                    }
-                                                </div>
-                                                <!-- Status -->
-                                                <div>
-                                                    @if (!string.IsNullOrEmpty(manga.publicationStatus))
-                                                    {
-                                                        <div class="flex items-center mt-1">
-                                                            <span class="font-semibold text-gray-800">Status: @manga.publicationStatus</span>
-                                                            <span class="ml-1 inline-block w-3 h-3 rounded-full relative top-0.5"
-                                                                  style="background-color:@(
+                                                    <!-- Genres -->
+                                                    <div>
+                                                        <strong>Genres:</strong>
+                                                        @if (manga.Genres?.Any() == true)
+                                                        {
+                                                            <ul class="flex flex-wrap gap-2 mt-1">
+                                                                @foreach (var genre in manga.Genres)
+                                                                {
+                                                                    <li class="bg-purple-200 text-purple-800 px-2 py-0.5 rounded text-xs font-semibold">
+                                                                        @genre
+                                                                    </li>
+                                                                }
+                                                            </ul>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-gray-500 text-xs italic">No genres listed</span>
+                                                        }
+                                                    </div>
+                                                    <!-- Status -->
+                                                    <div>
+                                                        @if (!string.IsNullOrEmpty(manga.publicationStatus))
+                                                        {
+                                                            <div class="flex items-center mt-1">
+                                                                <span class="font-semibold text-gray-800">Status: @manga.publicationStatus</span>
+                                                                <span class="ml-1 inline-block w-3 h-3 rounded-full relative top-0.5"
+                                                                      style="background-color:@(
                                         manga.publicationStatus.ToLower() switch
                                         {
                                             "ongoing" => "green",
@@ -744,69 +753,206 @@
                                             "hiatus" => "red",
                                             _ => "gray"
                                         })"
-                                                                  aria-label="status color indicator"
-                                                                  title="@manga.publicationStatus">
-                                                            </span>
-                                                        </div>
-                                                    }
-                                                </div>
-                                                <div class="mt-2 text-sm text-gray-700 font-medium">
-                                                    <span>
-                                                        Progress: @manga.chaptersRead / @(manga.pulishedChapterCount == 0 ? "?" : manga.pulishedChapterCount.ToString())
-                                                    </span>
-                                                    <form method="post" asp-page-handler="UpdateReadChapters" class="inline-flex items-center space-x-2">
-                                                        <input type="hidden" name="title" value="@manga.Title" />
-                                                        <input type="hidden" name="maxChapters" value="@manga.pulishedChapterCount" />
+                                                                      aria-label="status color indicator"
+                                                                      title="@manga.publicationStatus">
+                                                                </span>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                    <div class="mt-2 text-sm text-gray-700 font-medium">
+                                                        <span>
+                                                            Progress: @manga.chaptersRead / @(manga.pulishedChapterCount == 0 ? "?" : manga.pulishedChapterCount.ToString())
+                                                        </span>
+                                                        <form method="post" asp-page-handler="UpdateReadChapters" class="inline-flex items-center space-x-2">
+                                                            <input type="hidden" name="title" value="@manga.Title" />
+                                                            <input type="hidden" name="maxChapters" value="@manga.pulishedChapterCount" />
 
-                                                        <input type="number"
-                                                               name="readChapters"
-                                                               value="@manga.chaptersRead"
-                                                               min="0"
-                                                               class="w-16 px-2 py-1 border rounded text-sm text-gray-800"
-                                                               title="Enter a chapter number or press 📝 to submit" />
+                                                            <input type="number"
+                                                                   name="readChapters"
+                                                                   value="@manga.chaptersRead"
+                                                                   min="0"
+                                                                   class="w-16 px-2 py-1 border rounded text-sm text-gray-800"
+                                                                   title="Enter a chapter number or press 📝 to submit" />
 
-                                                        <button type="submit"
-                                                                title="Submit updated chapter count"
-                                                                class="text-blue-600 hover:text-blue-800 text-lg leading-none">
-                                                            📝
-                                                        </button>
-                                                    </form>
+                                                            <button type="submit"
+                                                                    title="Submit updated chapter count"
+                                                                    class="text-blue-600 hover:text-blue-800 text-lg leading-none">
+                                                                📝
+                                                            </button>
+                                                        </form>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <!-- Status Dropdown and Delete -->
-                                        <div class="flex items-center space-x-2 mt-1">
-                                            <form method="post" asp-page-handler="UpdateStatus" class="m-0">
-                                                <input type="hidden" name="title" value="@manga.Title" />
-                                                <select name="status"
-                                                        class="bg-white border border-gray-300 text-gray-800 text-sm rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none px-3 py-1 transition duration-200"
-                                                        onchange="this.form.submit()">
-                                                    <option value="Reading" selected="@(manga.Status == "Reading")">📖 Reading</option>
-                                                    <option value="Read" selected="@(manga.Status == "Read")">✅ Read</option>
-                                                    <option value="PlanToRead" selected="@(manga.Status == "PlanToRead")">📝 Plan to Read</option>
-                                                    <option value="UptoDateWithRelease" selected="@(manga.Status == "UptoDateWithRelease")">⏳ Up to Date</option>
-                                                    <option value="Onhold" selected="@(manga.Status == "Onhold")">⏸️ On Hold</option>
-                                                </select>
-                                            </form>
-                                            <button type="button"
-                                                    onclick="openDeleteModal('@manga.Title')"
-                                                    class="text-red-600 hover:text-red-800 bg-transparent border-none p-0 cursor-pointer"
-                                                    title="Delete Manga"
-                                                    style="font-size: 1.25rem;">
-                                                🗑️
-                                            </button>
+                                            <!-- Status Dropdown and Delete -->
+                                            <div class="flex items-center space-x-2 mt-1">
+                                                <form method="post" asp-page-handler="UpdateStatus" class="m-0">
+                                                    <input type="hidden" name="title" value="@manga.Title" />
+                                                    <select name="status"
+                                                            class="bg-white border border-gray-300 text-gray-800 text-sm rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none px-3 py-1 transition duration-200"
+                                                            onchange="this.form.submit()">
+                                                        <option value="Reading" selected="@(manga.Status == "Reading")">📖 Reading</option>
+                                                        <option value="Read" selected="@(manga.Status == "Read")">✅ Read</option>
+                                                        <option value="PlanToRead" selected="@(manga.Status == "PlanToRead")">📝 Plan to Read</option>
+                                                        <option value="UptoDateWithRelease" selected="@(manga.Status == "UptoDateWithRelease")">⏳ Up to Date</option>
+                                                        <option value="Onhold" selected="@(manga.Status == "Onhold")">⏸️ On Hold</option>
+                                                        <option value="Dropped" selected="@(manga.Status == "Dropped")">⛔ Dropped</option>
+                                                    </select>
+                                                </form>
+                                                <button type="button"
+                                                        onclick="openDeleteModal('@manga.Title')"
+                                                        class="text-red-600 hover:text-red-800 bg-transparent border-none p-0 cursor-pointer"
+                                                        title="Delete Manga"
+                                                        style="font-size: 1.25rem;">
+                                                    🗑️
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                </li>
-                            }
-                        </ul>
-                    </div>
-                }
-                else
-                {
-                    <p class="text-gray-500">You have nothing on hold or dropped.</p>
-                }
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-gray-500">You have nothing on hold.</p>
+                    }
+                </div>
+
+                <br />
+
+                <!-- Dropped -->
+
+                <div class="bg-white p-4 rounded shadow">
+                    <h2 class="text-xl font-semibold mb-4">⛔ Dropped</h2>
+                    @if (droppedList.Any())
+                    {
+                        <div class="scrollable-list max-h-72 overflow-y-auto">
+                            <ul id="readList" class="space-y-4">
+                                @foreach (var manga in droppedList)
+                                {
+                                    <li class="relative border-b pb-3"
+                                        data-genres="@GetGenresString(manga.Genres)"
+                                        data-fav="@manga.favourite.ToString().ToLower()">
+
+                                        <!-- ⭐ Favourite Toggle Star -->
+                                        <form method="post" asp-page-handler="ToggleFav"
+                                              class="absolute top-2 right-2 z-10">
+                                            <input type="hidden" name="title" value="@manga.Title" />
+                                            <button type="submit" class="fav-toggle-btn">
+                                                <span class="star @(manga.favourite ? "fav" : "not-fav")">★</span>
+                                            </button>
+                                        </form>
+
+                                        <!-- Main Manga Content -->
+                                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mt-6 md:mt-0">
+                                            <div class="flex space-x-2">
+                                                <img src="@manga.CoverImageUrl" alt="Cover for @manga.Title" class="w-12 h-16 object-cover rounded shadow manga-cover" referrerpolicy="no-referrer" />
+                                                <div>
+                                                    <a href="@manga.Link" target="_blank" class="text-lg font-semibold text-blue-600 hover:underline">@manga.Title</a>
+                                                    @if (!string.IsNullOrEmpty(manga.AltTitle))
+                                                    {
+                                                        <p class="text-sm text-gray-500 mt-0.5">@manga.AltTitle</p>
+                                                    }
+                                                    <!-- Genres -->
+                                                    <div>
+                                                        <strong>Genres:</strong>
+                                                        @if (manga.Genres?.Any() == true)
+                                                        {
+                                                            <ul class="flex flex-wrap gap-2 mt-1">
+                                                                @foreach (var genre in manga.Genres)
+                                                                {
+                                                                    <li class="bg-purple-200 text-purple-800 px-2 py-0.5 rounded text-xs font-semibold">
+                                                                        @genre
+                                                                    </li>
+                                                                }
+                                                            </ul>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-gray-500 text-xs italic">No genres listed</span>
+                                                        }
+                                                    </div>
+                                                    <!-- Status -->
+                                                    <div>
+                                                        @if (!string.IsNullOrEmpty(manga.publicationStatus))
+                                                        {
+                                                            <div class="flex items-center mt-1">
+                                                                <span class="font-semibold text-gray-800">Status: @manga.publicationStatus</span>
+                                                                <span class="ml-1 inline-block w-3 h-3 rounded-full relative top-0.5"
+                                                                      style="background-color:@(
+                                        manga.publicationStatus.ToLower() switch
+                                        {
+                                            "ongoing" => "green",
+                                            "completed" => "blue",
+                                            "hiatus" => "red",
+                                            _ => "gray"
+                                        })"
+                                                                      aria-label="status color indicator"
+                                                                      title="@manga.publicationStatus">
+                                                                </span>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                    <div class="mt-2 text-sm text-gray-700 font-medium">
+                                                        <span>
+                                                            Progress: @manga.chaptersRead / @(manga.pulishedChapterCount == 0 ? "?" : manga.pulishedChapterCount.ToString())
+                                                        </span>
+                                                        <form method="post" asp-page-handler="UpdateReadChapters" class="inline-flex items-center space-x-2">
+                                                            <input type="hidden" name="title" value="@manga.Title" />
+                                                            <input type="hidden" name="maxChapters" value="@manga.pulishedChapterCount" />
+
+                                                            <input type="number"
+                                                                   name="readChapters"
+                                                                   value="@manga.chaptersRead"
+                                                                   min="0"
+                                                                   class="w-16 px-2 py-1 border rounded text-sm text-gray-800"
+                                                                   title="Enter a chapter number or press 📝 to submit" />
+
+                                                            <button type="submit"
+                                                                    title="Submit updated chapter count"
+                                                                    class="text-blue-600 hover:text-blue-800 text-lg leading-none">
+                                                                📝
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Status Dropdown and Delete -->
+                                            <div class="flex items-center space-x-2 mt-1">
+                                                <form method="post" asp-page-handler="UpdateStatus" class="m-0">
+                                                    <input type="hidden" name="title" value="@manga.Title" />
+                                                    <select name="status"
+                                                            class="bg-white border border-gray-300 text-gray-800 text-sm rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none px-3 py-1 transition duration-200"
+                                                            onchange="this.form.submit()">
+                                                        <option value="Reading" selected="@(manga.Status == "Reading")">📖 Reading</option>
+                                                        <option value="Read" selected="@(manga.Status == "Read")">✅ Read</option>
+                                                        <option value="PlanToRead" selected="@(manga.Status == "PlanToRead")">📝 Plan to Read</option>
+                                                        <option value="UptoDateWithRelease" selected="@(manga.Status == "UptoDateWithRelease")">⏳ Up to Date</option>
+                                                        <option value="Onhold" selected="@(manga.Status == "Onhold")">⏸️ On Hold</option>
+                                                        <option value="Dropped" selected="@(manga.Status == "Dropped")">⛔ Dropped</option>
+                                                    </select>
+                                                </form>
+                                                <button type="button"
+                                                        onclick="openDeleteModal('@manga.Title')"
+                                                        class="text-red-600 hover:text-red-800 bg-transparent border-none p-0 cursor-pointer"
+                                                        title="Delete Manga"
+                                                        style="font-size: 1.25rem;">
+                                                    🗑️
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-gray-500">You haven't Dropped any Manga Yet.</p>
+                    }
+                </div>
 
             </div>
         </div>
