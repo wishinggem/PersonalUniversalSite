@@ -365,3 +365,9 @@ FodyWeavers.xsd
 # Ignore Website Content directories
 wwwroot/Libraries/
 wwwroot/Accounts/
+wwwroot/Libraries/*
+wwwroot/Accounts/*
+wwwroot/[Ll]ibraries/
+wwwroot/[Aa]ccounts/
+wwwroot/[Ll]ibraries/*
+wwwroot/[Aa]ccounts/*
