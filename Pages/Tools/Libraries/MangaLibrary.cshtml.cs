@@ -16,7 +16,7 @@ namespace PersonalUniversalSite.Pages.Tools.Libraries
         private readonly string mangaRootPath = Path.Combine("wwwroot", "Libraries", "Manga");
         private readonly string accountToLibraryPath = Path.Combine("wwwroot", "Libraries", "Manga", "accToLib.json");
         private readonly string librariesPath = Path.Combine("wwwroot", "Libraries", "Manga", "Libraries.json");
-        private readonly string accountsPath = Path.Combine("wwwroot", "Libraries", "Manga", "Accounts.json");
+        private readonly string accountsPath = Path.Combine("wwwroot", "Accounts", "Accounts.json");
         private readonly string coverRootPath = Path.Combine("wwwroot", "Libraries", "Manga", "Covers");
         private readonly string cachePath = Path.Combine("wwwroot", "Libraries", "Manga", "Cache.json");
 

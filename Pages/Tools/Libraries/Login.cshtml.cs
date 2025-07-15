@@ -5,7 +5,7 @@ namespace PersonalUniversalSite.Pages.Tools.Libraries
 {
     public class LoginModel : PageModel
     {
-        private readonly string accountsPath = Path.Combine("wwwroot", "Libraries", "Manga", "Accounts.json");
+        private readonly string accountsPath = Path.Combine("wwwroot", "Accounts", "Accounts.json");
         private string accountToLibraryPath = Path.Combine("wwwroot", "Libraries", "Manga", "accToLib.json");
         private string librariesPath = Path.Combine("wwwroot", "Libraries", "Manga", "Libraries.json");
 

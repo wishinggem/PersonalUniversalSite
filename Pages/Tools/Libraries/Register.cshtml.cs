@@ -5,7 +5,7 @@ namespace PersonalUniversalSite.Pages.Tools.Libraries
 {
     public class RegisterModel : PageModel
     {
-        private readonly string accountsPath = Path.Combine("wwwroot", "Libraries", "Manga", "Accounts.json");
+        private readonly string accountsPath = Path.Combine("wwwroot", "Accounts", "Accounts.json");
         private readonly string librariesPath = Path.Combine("wwwroot", "Libraries", "Manga", "Libraries.json");
         private readonly string accToLibPath = Path.Combine("wwwroot", "Libraries", "Manga", "accToLib.json");
 
