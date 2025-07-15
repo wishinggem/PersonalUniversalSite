@@ -7,6 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="wwwroot\Accounts\**" />
+    <Compile Remove="wwwroot\Libraries\**" />
+    <Content Remove="wwwroot\Accounts\**" />
+    <Content Remove="wwwroot\Libraries\**" />
+    <EmbeddedResource Remove="wwwroot\Accounts\**" />
+    <EmbeddedResource Remove="wwwroot\Libraries\**" />
+    <None Remove="wwwroot\Accounts\**" />
+    <None Remove="wwwroot\Libraries\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="wwwroot\DownloadDirs\data\" />
     <Folder Include="wwwroot\Scripts\" />
     <Folder Include="wwwroot\Shaders\" />
