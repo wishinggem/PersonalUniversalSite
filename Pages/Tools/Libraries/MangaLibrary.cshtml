@@ -693,7 +693,7 @@
                     @if (onholdList.Any())
                     {
                         <div class="scrollable-list max-h-72 overflow-y-auto">
-                            <ul id="onholdList" class="space-y-4">
+                            <ul id="readList" class="space-y-4">
                                 @foreach (var manga in onholdList)
                                 {
                                     <li class="relative border-b pb-3"
@@ -828,7 +828,7 @@
                     @if (droppedList.Any())
                     {
                         <div class="scrollable-list max-h-72 overflow-y-auto">
-                            <ul id="droppedList" class="space-y-4">
+                            <ul id="readList" class="space-y-4">
                                 @foreach (var manga in droppedList)
                                 {
                                     <li class="relative border-b pb-3"
@@ -1166,15 +1166,11 @@
             filterList('planToReadList');
             filterList('readList');
             filterList('uptoDateList');
-            filterList('onholdList');
-            filterList('droppedList');
 
             ensureGenrePillsVisible('readingList');
             ensureGenrePillsVisible('planToReadList');
             ensureGenrePillsVisible('readList');
             ensureGenrePillsVisible('uptoDateList');
-            ensureGenrePillsVisible('onholdList');
-            ensureGenrePillsVisible('droppedList');
         }
 
         let showFavouritesOnly = false;
