@@ -371,3 +371,8 @@ wwwroot/[Ll]ibraries/
 wwwroot/[Aa]ccounts/
 wwwroot/[Ll]ibraries/*
 wwwroot/[Aa]ccounts/*
+/PersonalUniversalSite.csproj
+/wwwroot/Libraries/Manga/Accounts.json
+/wwwroot/Libraries/Manga/accToLib.json
+/wwwroot/Libraries/Manga/Cache.json
+/wwwroot/Libraries/Manga/Libraries.json
