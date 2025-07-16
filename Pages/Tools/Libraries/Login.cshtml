@@ -110,6 +110,8 @@
                 <input type="password" name="password" required />
             </div>
 
+            <input type="hidden" id="@ViewData["redirect"]" name="@ViewData["redirect"]" value="@ViewData["redirect"]" />
+
             <button type="submit" class="login-button">Login</button>
 
             <a href="/Tools/Libraries/Register" class="create-account">Create Account</a>

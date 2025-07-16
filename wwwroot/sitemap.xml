@@ -33,14 +33,6 @@
     <lastmod>2025-6-28</lastmod>
   </url>
   <url>
-    <loc>https://chinatsuservices.ddns.net/Accounts/ModifyAccount</loc>
-    <lastmod>2024-8-11</lastmod>
-  </url>
-  <url>
-    <loc>https://chinatsuservices.ddns.net/Accounts/Profile</loc>
-    <lastmod>2025-6-28</lastmod>
-  </url>
-  <url>
     <loc>https://chinatsuservices.ddns.net/Shared/PartialViews/AccountDisplayPartialView</loc>
     <lastmod>2025-6-20</lastmod>
   </url>
@@ -50,14 +42,14 @@
   </url>
   <url>
     <loc>https://chinatsuservices.ddns.net/Tools/Libraries/Login</loc>
-    <lastmod>2025-6-29</lastmod>
+    <lastmod>2025-7-15</lastmod>
   </url>
   <url>
     <loc>https://chinatsuservices.ddns.net/Tools/Libraries/MangaLibrary</loc>
-    <lastmod>2025-6-29</lastmod>
+    <lastmod>2025-7-15</lastmod>
   </url>
   <url>
     <loc>https://chinatsuservices.ddns.net/Tools/Libraries/Register</loc>
-    <lastmod>2025-6-29</lastmod>
+    <lastmod>2025-7-16</lastmod>
   </url>
 </urlset>
